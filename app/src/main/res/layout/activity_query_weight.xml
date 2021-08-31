@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorSecondary"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingLeft="20sp"
+    android:paddingTop="60sp"
+    android:paddingRight="20sp"
+    android:paddingBottom="60sp"
+    tools:context=".QuerySex">
+
+    <TextView
+        android:id="@+id/question"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/question_weight"
+        android:textSize="32sp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="0sp"
+        android:layout_marginLeft="40sp"
+        android:layout_marginRight="40sp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/weight"
+            android:layout_width="192sp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:inputType="number"
+            android:text="70"
+            android:textSize="64sp"></EditText>
+
+        <Spinner
+            android:id="@+id/weight_unit"
+            android:layout_width="128sp"
+            android:layout_height="wrap_content"
+            android:textSize="100sp" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/validate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8sp"
+        android:background="@color/colorAccent"
+        android:text="@string/validate"
+        android:textSize="24sp" />
+
+</LinearLayout>
