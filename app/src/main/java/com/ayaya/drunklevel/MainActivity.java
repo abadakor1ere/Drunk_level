@@ -9,18 +9,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     
     SharedPreferences save;
-    List<Conso> consos;
+    List<Conso> consos = new ArrayList<>();
     
     ActivityResultLauncher<Object> getConso;
     
@@ -66,5 +68,13 @@ public class MainActivity extends AppCompatActivity {
             Intent sexIntent = new Intent(getApplicationContext(), QuerySex.class);
             startActivity(sexIntent);
         }
+        
+        // bouton d'ajout de consommation
+        findViewById(R.id.add_conso).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getConso.launch(null);
+            }
+        });
     }
 }
