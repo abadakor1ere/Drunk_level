@@ -39,6 +39,7 @@ public class SelectDrinkActivity extends AppCompatActivity {
     
     private Drink selectedDrink = null;
     private ActivityResultLauncher<Object> getVolume;
+    private ActivityResultLauncher<Object> createDrink;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,14 +69,15 @@ public class SelectDrinkActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 if (i==0) {
-                    Toast.makeText(getApplicationContext(), "Nouvelle", Toast.LENGTH_SHORT).show();
+                    createDrink.launch(null);
                 } else {
                     selectedDrink = drinks.get(i-1);
                     getVolume.launch(null);
                 }
             }
         });
-        
+    
+        // création d'un moyen de lancer l'activité permettant la demande d'un volume
         getVolume = registerForActivityResult(new ActivityResultContract<Object, Float>() {
             @Override
             public Intent createIntent(Context context, Object input) {
@@ -97,6 +99,27 @@ public class SelectDrinkActivity extends AppCompatActivity {
                 resultIntent.putExtra("drink", selectedDrink.toJSON().toString());
                 setResult(Activity.RESULT_OK, resultIntent);
                 finish();
+            }
+        });
+    
+        // création d'un moyen de lancer l'activité permettant la création d'une nouvelle boisson et de la retourner
+        createDrink = registerForActivityResult(new ActivityResultContract<Object, Drink>() {
+            @Override
+            public Intent createIntent(@NonNull Context context, Object input) {
+                return new Intent(context, CreateDrinkActivity.class);
+            }
+            @Override
+            public Drink parseResult(int resultCode, @Nullable Intent intent) {
+                if (resultCode == RESULT_OK && intent.getStringExtra("drink") != null)
+                    return Drink.fromJSON(intent.getStringExtra("drink"));
+                return null;
+            }
+        }, new ActivityResultCallback<Drink>(){
+            @Override
+            public void onActivityResult(Drink result) {
+                selectedDrink = result;
+                if (selectedDrink!=null)
+                    getVolume.launch(null);
             }
         });
     }

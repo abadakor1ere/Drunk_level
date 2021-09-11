@@ -13,4 +13,7 @@
     <string name="overdrunk">Arrête de boire</string>
     <string name="add_new_drink">Nouvelle boisson</string>
     <string name="question_volume">Quelle volume en as tu bu ?</string>
+    <string name="create_drink">Ajouter une boisson</string>
+    <string name="name">Nom</string>
+    <string name="alcohol_degree">Degré d\'alcool</string>
 </resources>
