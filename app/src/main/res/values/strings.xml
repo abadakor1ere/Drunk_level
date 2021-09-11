@@ -17,4 +17,5 @@
     <string name="name">Nom</string>
     <string name="alcohol_degree">Degré d\'alcool</string>
     <string name="required">Champ requis</string>
+    <string name="select_icon">Selectionner une icône</string>
 </resources>
