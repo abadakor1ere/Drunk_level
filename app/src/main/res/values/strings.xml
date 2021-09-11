@@ -16,4 +16,5 @@
     <string name="create_drink">Ajouter une boisson</string>
     <string name="name">Nom</string>
     <string name="alcohol_degree">Degré d\'alcool</string>
+    <string name="required">Champ requis</string>
 </resources>

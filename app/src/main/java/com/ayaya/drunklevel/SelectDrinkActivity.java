@@ -41,15 +41,21 @@ public class SelectDrinkActivity extends AppCompatActivity {
     private ActivityResultLauncher<Object> getVolume;
     private ActivityResultLauncher<Object> createDrink;
     
+    private static final String defaultDrinksJSON = "[{\"name\":\"Piña colada\", \"concentration\":126, \"imageName\":\"liquor_svg\"}," +
+            "{\"name\":\"Jager\", \"concentration\":276, \"imageName\":\"herbal_liquor_svg\"}," +
+            "{\"name\":\"Whisky\", \"concentration\":316, \"imageName\":\"whiskey_svg\"}," +
+            "{\"name\":\"Bière\", \"concentration\":67, \"imageName\":\"beer_svg\"}," +
+            "{\"name\":\"Mojito\", \"concentration\":95, \"imageName\":\"mojito_svg\"}]";
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_drink);
         
-        SharedPreferences save = getSharedPreferences("save", MODE_PRIVATE);
+        final SharedPreferences save = getSharedPreferences("save", MODE_PRIVATE);
         final List<Drink> drinks = new ArrayList<>();
         try {
-            JSONArray jsonDrinks = new JSONArray(save.getString("drinks", "[]"));
+            JSONArray jsonDrinks = new JSONArray(save.getString("drinks", defaultDrinksJSON));
             for (int i = 0; i < jsonDrinks.length(); i++) {
                 JSONObject jsonDrink = jsonDrinks.getJSONObject(i);
                 drinks.add(new Drink(jsonDrink.getString("name"), jsonDrink.getLong("concentration"), jsonDrink.getString("imageName")));
@@ -57,11 +63,6 @@ public class SelectDrinkActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        drinks.add(new Drink("Piña colada", 126, getResources().getResourceName(R.drawable.liquor_svg)));
-        drinks.add(new Drink("Jager", 276, getResources().getResourceName(R.drawable.herbal_liquor_svg)));
-        drinks.add(new Drink("Whisky", 316, getResources().getResourceName(R.drawable.whiskey_svg)));
-        drinks.add(new Drink("Bière", 67, getResources().getResourceName(R.drawable.beer_svg)));
-        drinks.add(new Drink("Mojito", 95, getResources().getResourceName(R.drawable.mojito_svg)));
         GridView drinksGrid = findViewById(R.id.drinks);
         drinksGrid.setAdapter(new DrinksAdapter(getApplicationContext(), drinks));
         
@@ -117,6 +118,11 @@ public class SelectDrinkActivity extends AppCompatActivity {
         }, new ActivityResultCallback<Drink>(){
             @Override
             public void onActivityResult(Drink result) {
+                JSONArray jsonDrinks = new JSONArray();
+                jsonDrinks.put(result.toJSON());
+                for (Drink drink : drinks)
+                    jsonDrinks.put(drink.toJSON());
+                save.edit().putString("drinks", jsonDrinks.toString()).commit();
                 selectedDrink = result;
                 if (selectedDrink!=null)
                     getVolume.launch(null);
