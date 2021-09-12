@@ -1,10 +1,5 @@
 package com.ayaya.drunklevel;
 
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContract;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,12 +7,19 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContract;
+import androidx.appcompat.app.AppCompatActivity;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     
@@ -76,12 +78,14 @@ public class MainActivity extends AppCompatActivity {
                 getConso.launch(null);
             }
         });
+        
     }
     
     /**
      * Calcule la concentration massique d'alcool dans le sang au temps time
      * @param time en secondes
      * @param mass en kg
+     * @param consos doit être triée chronologiquement
      * @see Conso
      * @see Sex
      * @return concentration en g/L
@@ -90,12 +94,48 @@ public class MainActivity extends AppCompatActivity {
         float coeffDiffusion = sex==Sex.MALE ? 0.7f : sex==Sex.FEMALE ? 0.6f : 0.65f;
         float concentration = 0;
         for (int i = 0; i < consos.size(); i++) {
+            if (consos.get(i).getTime() >= time)
+                break;
             float concentrationConso = consos.get(i).getAlcoholMass() / (mass * coeffDiffusion);
             concentration += concentrationConso;
             long pauseTime = (i==consos.size()-1?time:consos.get(i+1).getTime()) - consos.get(i).getTime();
-            concentration -= pauseTime * 0.12f / 3600; // taux de dégradation moyen de l'alcool de 12 g/L/h
+            concentration = Math.max(0, concentration - pauseTime * 0.12f / 3600); // taux de dégradation moyen de l'alcool de 12 g/L/h
         }
         return concentration;
+    }
+    
+    public static Map<Long,Float> getBloodConcentrations(List<Conso> consos, long fromTime, long toTime, float mass, int sex) {
+        Map<Long,Float> concentrations = new HashMap<>();
+        float coeffDiffusion = sex==Sex.MALE ? 0.7f : sex==Sex.FEMALE ? 0.6f : 0.65f;
+        float concentration = 0;
+        for (int i = 0; i < consos.size(); i++) {
+            // Ajout de l'alcool consommé
+            float concentrationConso = consos.get(i).getAlcoholMass() / (mass * coeffDiffusion);
+            concentration += concentrationConso;
+            // Si c'est dans l'intervale
+            if  (fromTime <= consos.get(i).getTime() && consos.get(i).getTime() <= toTime) {
+                concentrations.put(consos.get(i).getTime(), concentration);
+            }
+            // Si le suivant est le premier dans l'intervale
+            if (concentrations.isEmpty() && i+1<consos.size() && consos.get(i+1).getTime() >= fromTime) {
+                long pauseTime = fromTime - consos.get(i).getTime();
+                concentrations.put(fromTime, Math.max(0, concentration - pauseTime * 0.12f / 3600));
+            }
+            // Si c'est le dernier dans l'intervale
+            if (i+1>=consos.size() || consos.get(i+1).getTime() >= toTime) {
+                long pauseTime = toTime - consos.get(i).getTime();
+                concentrations.put(toTime, Math.max(0, concentration - pauseTime * 0.12f / 3600));
+                break;
+            }
+            // Dégradation de l'alcool jusqu'à la prochaine consommation
+            long pauseTime = (i+1==consos.size()?toTime:consos.get(i+1).getTime()) - consos.get(i).getTime();
+            concentration = Math.max(0, concentration - pauseTime * 0.12f / 3600); // taux de dégradation moyen de l'alcool de 12 g/L/h
+        }
+        if (concentrations.get(fromTime)==null)
+            concentrations.put(fromTime, 0f);
+        if (concentrations.get(toTime)==null)
+            concentrations.put(toTime, 0f);
+        return concentrations;
     }
     
 }
