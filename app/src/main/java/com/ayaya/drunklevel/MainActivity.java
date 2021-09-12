@@ -77,4 +77,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    
+    /**
+     * Calcule la concentration massique d'alcool dans le sang au temps time
+     * @param time en secondes
+     * @param mass en kg
+     * @see Conso
+     * @see Sex
+     * @return concentration en g/L
+     */
+    public static float getBloodConcentration(List<Conso> consos, long time, float mass, int sex) {
+        float coeffDiffusion = sex==Sex.MALE ? 0.7f : sex==Sex.FEMALE ? 0.6f : 0.65f;
+        float concentration = 0;
+        for (int i = 0; i < consos.size(); i++) {
+            float concentrationConso = consos.get(i).getAlcoholMass() / (mass * coeffDiffusion);
+            concentration += concentrationConso;
+            long pauseTime = (i==consos.size()-1?time:consos.get(i+1).getTime()) - consos.get(i).getTime();
+            concentration -= pauseTime * 0.12f / 3600; // taux de dégradation moyen de l'alcool de 12 g/L/h
+        }
+        return concentration;
+    }
+    
 }
