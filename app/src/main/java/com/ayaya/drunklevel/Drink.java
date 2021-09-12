@@ -6,9 +6,14 @@ import org.json.JSONObject;
 public class Drink {
     
     private String name;
-    private float concentration; // concentration d'alcool en g/L
+    private float concentration;
     private String imageName;
     
+    /**
+     * @param name nom de la boisson
+     * @param concentration concentration d'alcool en g/L
+     * @param imageName nom d'une ressources drawable
+     */
     public Drink(String name, float concentration, String imageName) {
         this.name = name;
         this.concentration = concentration;

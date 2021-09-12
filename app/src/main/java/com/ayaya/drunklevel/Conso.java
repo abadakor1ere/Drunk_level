@@ -7,10 +7,15 @@ import java.util.Date;
 
 public class Conso {
     
-    private long time; // heure de la consomation en secondes
+    private long time;
     private Drink drink;
-    private float volume; // volume de la boisson consommée en litres
+    private float volume;
     
+    /**
+     * @param time horaire en secondes
+     * @param drink Boisson consommée
+     * @param volume en L
+     */
     public Conso(long time, Drink drink, float volume) {
         this.time = time;
         this.drink = drink;
