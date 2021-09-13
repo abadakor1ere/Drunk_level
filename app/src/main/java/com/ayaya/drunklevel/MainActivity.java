@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultCallback;
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public Conso parseResult(int resultCode, Intent intent) {
                 if (resultCode == RESULT_OK && intent.getFloatExtra("volume", -1f) != -1f && intent.getStringExtra("drink") != null)
-                    return new Conso(new Date().getTime(), Drink.fromJSON(intent.getStringExtra("drink")), intent.getFloatExtra("volume", -1f));
+                    return new Conso(new Date().getTime()/1000, Drink.fromJSON(intent.getStringExtra("drink")), intent.getFloatExtra("volume", -1f));
                 return null;
             }
         }, new ActivityResultCallback<Conso>() {
@@ -61,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
                 if (conso == null)
                     return;
                 consos.add(conso);
-                Toast.makeText(getApplicationContext(), conso.getTime()+" "+conso.getVolume()+"L de "+conso.getDrink().getName(), Toast.LENGTH_LONG).show();
+                refreshDrunkLevel();
             }
         });
         
@@ -78,9 +79,17 @@ public class MainActivity extends AppCompatActivity {
                 getConso.launch(null);
             }
         });
-        
+
+        refreshDrunkLevel();
     }
-    
+
+    protected void refreshDrunkLevel() {
+        Toast.makeText(this, consos.toString(), Toast.LENGTH_SHORT).show();
+        TextView tauxAlcoolemie = findViewById(R.id.taux_alcoolemie);
+        tauxAlcoolemie.setText("Voici votre taux :"+getBloodConcentration(consos, new Date().getTime()/1000, 70, Sex.MALE)+"g/L");
+
+    }
+
     /**
      * Calcule la concentration massique d'alcool dans le sang au temps time
      * @param time en secondes
