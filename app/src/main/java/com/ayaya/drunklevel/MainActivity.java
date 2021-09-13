@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
         float coeffDiffusion = sex==Sex.MALE ? 0.7f : sex==Sex.FEMALE ? 0.6f : 0.65f;
         float concentration = 0;
         for (int i = 0; i < consos.size(); i++) {
-            if (consos.get(i).getTime() >= time)
+            if (consos.get(i).getTime() > time)
                 break;
             float concentrationConso = consos.get(i).getAlcoholMass() / (mass * coeffDiffusion);
             concentration += concentrationConso;
