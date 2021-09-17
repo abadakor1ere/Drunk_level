@@ -18,9 +18,9 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class MainActivity extends AppCompatActivity {
     
@@ -133,7 +133,9 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, consos.toString(), Toast.LENGTH_SHORT).show();
         TextView tauxAlcoolemie = findViewById(R.id.taux_alcoolemie);
         tauxAlcoolemie.setText("Voici votre taux :"+getBloodConcentration(consos, new Date().getTime()/1000, weight, sex)+"g/L");
-
+    
+        GraphView graphView = findViewById(R.id.graph);
+        graphView.setPoints(getBloodConcentrations(consos, new Date().getTime()/1000, new Date().getTime()/1000+24*60*60, weight, sex));
     }
 
     /**
@@ -159,8 +161,8 @@ public class MainActivity extends AppCompatActivity {
         return concentration;
     }
     
-    public static Map<Long,Float> getBloodConcentrations(List<Conso> consos, long fromTime, long toTime, float mass, int sex) {
-        Map<Long,Float> concentrations = new HashMap<>();
+    public static SortedMap<Long,Float> getBloodConcentrations(List<Conso> consos, long fromTime, long toTime, float mass, int sex) {
+        SortedMap<Long,Float> concentrations = new TreeMap<>();
         float coeffDiffusion = sex==Sex.MALE ? 0.7f : sex==Sex.FEMALE ? 0.6f : 0.65f;
         float concentration = 0;
         for (int i = 0; i < consos.size(); i++) {
