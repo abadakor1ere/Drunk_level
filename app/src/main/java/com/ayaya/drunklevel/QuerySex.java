@@ -29,12 +29,9 @@ public class QuerySex extends AppCompatActivity {
     }
     
     protected void setSex(int sex) {
-        SharedPreferences save = getSharedPreferences("save", Activity.MODE_PRIVATE);
-        save.edit().putInt("sex", sex).commit();
-        if (save.getFloat("weight", -1f) == -1f) {
-            Intent i = new Intent(this, QueryWeight.class);
-            startActivity(i);
-        }
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("sex", sex);
+        setResult(RESULT_OK, resultIntent);
         finish();
     }
     

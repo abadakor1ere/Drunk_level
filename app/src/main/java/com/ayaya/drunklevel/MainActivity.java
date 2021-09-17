@@ -24,10 +24,14 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     
-    SharedPreferences save;
-    List<Conso> consos = new ArrayList<>();
+    private SharedPreferences save;
+    private List<Conso> consos = new ArrayList<>();
+    private int sex;
+    private float weight;
     
-    ActivityResultLauncher<Object> getConso;
+    ActivityResultLauncher<Object> addConso;
+    ActivityResultLauncher<Object> setSex;
+    ActivityResultLauncher<Object> setWeight;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,8 +48,46 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         
+        // création d'un moyen de modifier le sexe et le poids
+        setSex = registerForActivityResult(new ActivityResultContract<Object, Integer>() {
+            @Override
+            public Intent createIntent(Context context, Object input) {
+                return new Intent(context, QuerySex.class);
+            }
+            @Override
+            public Integer parseResult(int resultCode, Intent intent) {
+                if (resultCode == RESULT_OK && intent.getIntExtra("sex", -1) != -1)
+                    return intent.getIntExtra("sex", -1);
+                return null;
+            }
+        }, new ActivityResultCallback<Integer>() {
+            @Override
+            public void onActivityResult(Integer result) {
+                sex = result;
+                save.edit().putInt("sex", result).apply();
+            }
+        });
+        setWeight = registerForActivityResult(new ActivityResultContract<Object, Float>() {
+            @Override
+            public Intent createIntent(Context context, Object input) {
+                return new Intent(context, QueryWeight.class);
+            }
+            @Override
+            public Float parseResult(int resultCode, Intent intent) {
+                if (resultCode == RESULT_OK && intent.getFloatExtra("weight", -1f) != -1f)
+                    return intent.getFloatExtra("weight", -1f);
+                return null;
+            }
+        }, new ActivityResultCallback<Float>() {
+            @Override
+            public void onActivityResult(Float result) {
+                weight = result;
+                save.edit().putFloat("weight", result).apply();
+            }
+        });
+        
         // création d'un moyen de lancer les activités permettant la demande de ce qui a été consommé
-        getConso = registerForActivityResult(new ActivityResultContract<Object, Conso>() {
+        addConso = registerForActivityResult(new ActivityResultContract<Object, Conso>() {
             @Override
             public Intent createIntent(Context context, Object input) {
                 return new Intent(context, SelectDrinkActivity.class);
@@ -67,16 +109,20 @@ public class MainActivity extends AppCompatActivity {
         });
         
         // Si le sexe ou le poids n'est pas dans la sauvegarde, on les demande
-        if (save.getInt("sex", -1) == -1 || save.getFloat("weight", -1f) == -1f) {
-            Intent sexIntent = new Intent(getApplicationContext(), QuerySex.class);
-            startActivity(sexIntent);
-        }
+        if (save.getFloat("weight", -1f) == -1f)
+            setWeight.launch(null);
+        else
+            weight = save.getFloat("weight", -1f);
+        if (save.getInt("sex", -1) == -1)
+            setSex.launch(null);
+        else
+            sex = save.getInt("sex", -1);
         
         // bouton d'ajout de consommation
         findViewById(R.id.add_conso).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getConso.launch(null);
+                addConso.launch(null);
             }
         });
 
@@ -86,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
     protected void refreshDrunkLevel() {
         Toast.makeText(this, consos.toString(), Toast.LENGTH_SHORT).show();
         TextView tauxAlcoolemie = findViewById(R.id.taux_alcoolemie);
-        tauxAlcoolemie.setText("Voici votre taux :"+getBloodConcentration(consos, new Date().getTime()/1000, 70, Sex.MALE)+"g/L");
+        tauxAlcoolemie.setText("Voici votre taux :"+getBloodConcentration(consos, new Date().getTime()/1000, weight, sex)+"g/L");
 
     }
 

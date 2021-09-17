@@ -1,7 +1,6 @@
 package com.ayaya.drunklevel;
 
-import android.app.Activity;
-import android.content.SharedPreferences;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -31,8 +30,9 @@ public class QueryWeight extends AppCompatActivity {
                 float weight = Float.parseFloat(((EditText)findViewById(R.id.weight)).getText().toString());
                 if (unitsList.get(((Spinner)findViewById(R.id.weight_unit)).getSelectedItemPosition()).equals("oz"))
                     weight /= 35.274f;
-                SharedPreferences save = getSharedPreferences("save", Activity.MODE_PRIVATE);
-                save.edit().putFloat("weight", weight).commit();
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("weight", weight);
+                setResult(RESULT_OK, resultIntent);
                 finish();
             }
         });
