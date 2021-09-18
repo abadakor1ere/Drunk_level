@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 consos.add(conso);
                 refreshDrunkLevel();
+                saveConsos();
             }
         });
         
@@ -129,12 +130,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void refreshDrunkLevel() {
-        Toast.makeText(this, consos.toString(), Toast.LENGTH_SHORT).show();
         TextView tauxAlcoolemie = findViewById(R.id.taux_alcoolemie);
         tauxAlcoolemie.setText("Voici votre taux :"+getBloodConcentration(consos, new Date().getTime()/1000, weight, sex)+"g/L");
         
         GraphView graphView = findViewById(R.id.graph);
         graphView.setPoints(getBloodConcentrations(consos, new Date().getTime()/1000-2*60*60, new Date().getTime()/1000+12*60*60, weight, sex));
+    }
+    
+    protected void saveConsos() {
+        JSONArray jsonConsos = new JSONArray();
+        for (Conso conso : consos)
+            jsonConsos.put(conso.toJSON());
+        save.edit().putString("consos", jsonConsos.toString()).apply();
     }
 
     /**
