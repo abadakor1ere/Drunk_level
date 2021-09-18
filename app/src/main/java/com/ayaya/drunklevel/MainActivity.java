@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,8 +20,6 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 public class MainActivity extends AppCompatActivity {
     
@@ -133,9 +132,9 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, consos.toString(), Toast.LENGTH_SHORT).show();
         TextView tauxAlcoolemie = findViewById(R.id.taux_alcoolemie);
         tauxAlcoolemie.setText("Voici votre taux :"+getBloodConcentration(consos, new Date().getTime()/1000, weight, sex)+"g/L");
-    
+        
         GraphView graphView = findViewById(R.id.graph);
-        graphView.setPoints(getBloodConcentrations(consos, new Date().getTime()/1000, new Date().getTime()/1000+24*60*60, weight, sex));
+        graphView.setPoints(getBloodConcentrations(consos, new Date().getTime()/1000-2*60*60, new Date().getTime()/1000+12*60*60, weight, sex));
     }
 
     /**
@@ -156,13 +155,13 @@ public class MainActivity extends AppCompatActivity {
             float concentrationConso = consos.get(i).getAlcoholMass() / (mass * coeffDiffusion);
             concentration += concentrationConso;
             long pauseTime = (i==consos.size()-1?time:consos.get(i+1).getTime()) - consos.get(i).getTime();
-            concentration = Math.max(0, concentration - pauseTime * 0.12f / 3600); // taux de dégradation moyen de l'alcool de 12 g/L/h
+            concentration = Math.max(0, concentration - pauseTime * 0.12f / 3600); // taux de dégradation moyen de l'alcool de 0.12 g/L/h
         }
         return concentration;
     }
     
-    public static SortedMap<Long,Float> getBloodConcentrations(List<Conso> consos, long fromTime, long toTime, float mass, int sex) {
-        SortedMap<Long,Float> concentrations = new TreeMap<>();
+    public static List<Pair<Long,Float>> getBloodConcentrations(List<Conso> consos, long fromTime, long toTime, float mass, int sex) {
+        List<Pair<Long,Float>> concentrations = new ArrayList<>();
         float coeffDiffusion = sex==Sex.MALE ? 0.7f : sex==Sex.FEMALE ? 0.6f : 0.65f;
         float concentration = 0;
         for (int i = 0; i < consos.size(); i++) {
@@ -171,27 +170,33 @@ public class MainActivity extends AppCompatActivity {
             concentration += concentrationConso;
             // Si c'est dans l'intervale
             if  (fromTime <= consos.get(i).getTime() && consos.get(i).getTime() <= toTime) {
-                concentrations.put(consos.get(i).getTime(), concentration);
+                concentrations.add(new Pair<>(consos.get(i).getTime(), concentration));
             }
             // Si le suivant est le premier dans l'intervale
             if (concentrations.isEmpty() && i+1<consos.size() && consos.get(i+1).getTime() >= fromTime) {
                 long pauseTime = fromTime - consos.get(i).getTime();
-                concentrations.put(fromTime, Math.max(0, concentration - pauseTime * 0.12f / 3600));
+                concentrations.add(new Pair<>(fromTime, Math.max(0, concentration - pauseTime * 0.12f / 3600)));
             }
             // Si c'est le dernier dans l'intervale
-            if (i+1>=consos.size() || consos.get(i+1).getTime() >= toTime) {
+            /*if (i+1>=consos.size() || consos.get(i+1).getTime() >= toTime) {
                 long pauseTime = toTime - consos.get(i).getTime();
                 concentrations.put(toTime, Math.max(0, concentration - pauseTime * 0.12f / 3600));
                 break;
-            }
+            }*/
             // Dégradation de l'alcool jusqu'à la prochaine consommation
             long pauseTime = (i+1==consos.size()?toTime:consos.get(i+1).getTime()) - consos.get(i).getTime();
-            concentration = Math.max(0, concentration - pauseTime * 0.12f / 3600); // taux de dégradation moyen de l'alcool de 12 g/L/h
+            if (pauseTime > concentration / 0.12f * 3600)
+                pauseTime = (long)(concentration * 3600 / 0.12f);
+            concentration = Math.max(0, concentration - pauseTime * 0.12f / 3600); // taux de dégradation moyen de l'alcool de 0.12 g/L/h
+            concentrations.add(new Pair<>(consos.get(i).getTime()+pauseTime, concentration));
+            // Si c'est le dernier dans l'intervale
+            if (i+1>=consos.size() || consos.get(i+1).getTime() >= toTime)
+                break;
         }
-        if (concentrations.get(fromTime)==null)
-            concentrations.put(fromTime, 0f);
-        if (concentrations.get(toTime)==null)
-            concentrations.put(toTime, 0f);
+        if (concentrations.isEmpty() || concentrations.get(0).first != 0)
+            concentrations.add(0, new Pair<>(fromTime, 0f));
+        if (concentrations.isEmpty() || concentrations.get(concentrations.size()-1).first != toTime)
+            concentrations.add(new Pair<>(toTime, 0f));
         return concentrations;
     }
     
