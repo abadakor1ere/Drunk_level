@@ -5,9 +5,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Pair;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -17,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -26,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences save;
     private List<Conso> consos = new ArrayList<>();
     private int sex;
-    private float weight;
+    private float mass;
     
     ActivityResultLauncher<Object> addConso;
     ActivityResultLauncher<Object> setSex;
@@ -80,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         }, new ActivityResultCallback<Float>() {
             @Override
             public void onActivityResult(Float result) {
-                weight = result;
+                mass = result;
                 save.edit().putFloat("weight", result).apply();
             }
         });
@@ -112,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
         if (save.getFloat("weight", -1f) == -1f)
             setWeight.launch(null);
         else
-            weight = save.getFloat("weight", -1f);
+            mass = save.getFloat("weight", -1f);
         if (save.getInt("sex", -1) == -1)
             setSex.launch(null);
         else
@@ -125,16 +130,23 @@ public class MainActivity extends AppCompatActivity {
                 addConso.launch(null);
             }
         });
+        
+        ((ListView)findViewById(R.id.consos)).setAdapter(new ConsoAdapter(this, consos, mass, sex));
 
         refreshDrunkLevel();
     }
 
     protected void refreshDrunkLevel() {
         TextView tauxAlcoolemie = findViewById(R.id.taux_alcoolemie);
-        tauxAlcoolemie.setText("Voici votre taux :"+getBloodConcentration(consos, new Date().getTime()/1000, weight, sex)+"g/L");
+        float bloodConcentration = getBloodConcentration(consos, new Date().getTime()/1000, mass, sex);
+        tauxAlcoolemie.setText("Voici votre taux :"+bloodConcentration+"g/L");
+        
+        ((TextView)findViewById(R.id.level)).setText(getLevel(bloodConcentration));
+        
+        findViewById(R.id.consos).invalidate();
         
         GraphView graphView = findViewById(R.id.graph);
-        graphView.setPoints(getBloodConcentrations(consos, new Date().getTime()/1000-2*60*60, new Date().getTime()/1000+12*60*60, weight, sex));
+        graphView.setPoints(getBloodConcentrations(consos, new Date().getTime()/1000-2*60*60, new Date().getTime()/1000+12*60*60, mass, sex));
     }
     
     protected void saveConsos() {
@@ -142,6 +154,16 @@ public class MainActivity extends AppCompatActivity {
         for (Conso conso : consos)
             jsonConsos.put(conso.toJSON());
         save.edit().putString("consos", jsonConsos.toString()).apply();
+    }
+    
+    public String getLevel(float concentration) {
+        if (concentration < 0.1f)
+            return getString(R.string.sober);
+        if (concentration < 0.2f)
+            return getString(R.string.tipsy);
+        if (concentration < 0.3f)
+            return getString(R.string.drunk);
+        return getString(R.string.overdrunk);
     }
 
     /**
@@ -205,6 +227,54 @@ public class MainActivity extends AppCompatActivity {
         if (concentrations.isEmpty() || concentrations.get(concentrations.size()-1).first != toTime)
             concentrations.add(new Pair<>(toTime, 0f));
         return concentrations;
+    }
+    
+    public class ConsoAdapter extends BaseAdapter {
+    
+        private List<Conso> consos;
+        private LayoutInflater inflater;
+        private float mass, coeffDiffusion;
+        
+        private ConsoAdapter(Context context, List<Conso> consos, float mass, float coeffDiffusion) {
+            this.consos = consos;
+            this.mass = mass;
+            this.coeffDiffusion = coeffDiffusion;
+            inflater = LayoutInflater.from(context);
+        }
+        
+        @Override
+        public int getCount() {
+            return consos.size();
+        }
+    
+        @Override
+        public Conso getItem(int i) {
+            return consos.get(i);
+        }
+    
+        @Override
+        public long getItemId(int i) {
+            return 0;
+        }
+    
+        @Override
+        public View getView(int i, View convertView, ViewGroup viewGroup) {
+            View view = inflater.inflate(R.layout.conso_view, viewGroup, false);
+            Conso conso = consos.get(i);
+            ((ImageView)view.findViewById(R.id.icon)).setImageResource(getResources().getIdentifier(conso.getDrink().getImageName(), "drawable", getPackageName()));
+            ((TextView)view.findViewById(R.id.name)).setText(conso.getDrink().getName());
+            ((TextView)view.findViewById(R.id.alcohol_degree)).setText(toFixed(conso.getDrink().getDegree(),1)+"%");
+            ((TextView)view.findViewById(R.id.glass)).setText("Verre inconnu");
+            ((TextView)view.findViewById(R.id.volume)).setText(toFixed(conso.getVolume(),2)+"L");
+            ((TextView)view.findViewById(R.id.alcohol_mass)).setText(toFixed(conso.getAlcoholMass(),1)+"g");
+            ((TextView)view.findViewById(R.id.concentration)).setText("+"+toFixed(consos.get(i).getAlcoholMass() / (mass*coeffDiffusion),2)+"g/L");
+            
+            return view;
+        }
+    }
+    
+    public static String toFixed(float n, int scale) {
+        return new BigDecimal(n).setScale(scale, BigDecimal.ROUND_HALF_DOWN).toString();
     }
     
 }

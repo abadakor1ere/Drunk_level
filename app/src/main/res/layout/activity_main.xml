@@ -5,24 +5,29 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MainActivity">
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/add_conso"
-        android:text="@string/add_conso" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/taux_alcoolemie" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/level" />
 
     <com.ayaya.drunklevel.GraphView
         android:layout_width="match_parent"
         android:layout_height="192sp"
         android:id="@+id/graph" />
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="192sp"
+        android:id="@+id/consos" />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/add_conso"
+        android:text="@string/add_conso" />
 
 </LinearLayout>
